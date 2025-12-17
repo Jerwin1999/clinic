@@ -1,0 +1,267 @@
+{% extends 'admin/base-admin.html.twig' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">📊 Dashboard</h1>
+        <div class="text-muted">
+            <i class="bi bi-calendar3 me-1"></i>
+            {{ "now"|date("F j, Y") }}
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <!-- Doctors Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow-sm h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">
+                                Total Doctors
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">{{ doctor_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-heart-pulse fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <a href="{{ path('app_doctor_index') }}" class="text-decoration-none small">
+                            View Doctors <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Patients Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow-sm h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">
+                                Total Patients
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">{{ patient_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-person-badge fa-2x text-success"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <a href="{{ path('app_patient_index') }}" class="text-decoration-none small">
+                            View Patients <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointments Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow-sm h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-info text-uppercase mb-1">
+                                Total Appointments
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">{{ appointment_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-calendar-check fa-2x text-info"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <a href="{{ path('app_appointment_index') }}" class="text-decoration-none small">
+                            View Appointments <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Card (Only for Admin) -->
+        {% if is_granted('ROLE_ADMIN') %}
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow-sm h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">
+                                Total Users
+                            </div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">{{ user_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-people fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <a href="{{ path('app_user_index') }}" class="text-decoration-none small">
+                            View Users <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Appointment Status -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 fw-bold">
+                        <i class="bi bi-pie-chart me-2"></i>Appointments Status Breakdown
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if status_counts is not empty %}
+                        <div class="row">
+                            {% for status, count in status_counts %}
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-body py-3">
+                                        <div class="text-center">
+                                            <h6 class="mb-2">
+                                                {% if status == 'Pending' %}
+                                                    <span class="badge bg-warning text-dark">{{ status }}</span>
+                                                {% elseif status == 'Approved' %}
+                                                    <span class="badge bg-success">{{ status }}</span>
+                                                {% elseif status == 'Cancelled' %}
+                                                    <span class="badge bg-danger">{{ status }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ status }}</span>
+                                                {% endif %}
+                                            </h6>
+                                            <div class="h3 fw-bold mb-1">{{ count }}</div>
+                                            <small class="text-muted">
+                                                {% if appointment_count > 0 %}
+                                                    {{ ((count / appointment_count) * 100)|round(1) }}% of total
+                                                {% else %}
+                                                    0% of total
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-3">No appointment data available</p>
+                            <a href="{{ path('app_appointment_new') }}" class="btn btn-primary btn-sm mt-2">
+                                <i class="bi bi-plus-circle me-1"></i> Create First Appointment
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 fw-bold">
+                        <i class="bi bi-lightning me-2"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3 col-6">
+                            <a href="{{ path('app_appointment_new') }}" class="btn btn-outline-primary w-100 h-100 py-3">
+                                <i class="bi bi-plus-circle-dotted d-block mb-2" style="font-size: 1.5rem;"></i>
+                                New Appointment
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="{{ path('app_patient_new') }}" class="btn btn-outline-success w-100 h-100 py-3">
+                                <i class="bi bi-person-plus d-block mb-2" style="font-size: 1.5rem;"></i>
+                                Add Patient
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="{{ path('app_doctor_new') }}" class="btn btn-outline-info w-100 h-100 py-3">
+                                <i class="bi bi-plus-square d-block mb-2" style="font-size: 1.5rem;"></i>
+                                Add Doctor
+                            </a>
+                        </div>
+                        {% if is_granted('ROLE_ADMIN') %}
+                        <div class="col-md-3 col-6">
+                            <a href="{{ path('app_user_new') }}" class="btn btn-outline-warning w-100 h-100 py-3">
+                                <i class="bi bi-person-plus d-block mb-2" style="font-size: 1.5rem;"></i>
+                                Add User
+                            </a>
+                        </div>
+                        {% else %}
+                        <div class="col-md-3 col-6">
+                            <a href="{{ path('app_activity_log_index') }}" class="btn btn-outline-secondary w-100 h-100 py-3">
+                                <i class="bi bi-clock-history d-block mb-2" style="font-size: 1.5rem;"></i>
+                                View Logs
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 fw-bold">
+                        <i class="bi bi-info-circle me-2"></i>System Status
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="bi bi-database text-primary me-2"></i> Database Status</span>
+                                    <span class="badge bg-success">Connected</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="bi bi-person-check text-success me-2"></i> Logged in as</span>
+                                    <span class="fw-bold">{{ app.user.username }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="bi bi-shield-check text-warning me-2"></i> User Role</span>
+                                    <span class="badge bg-warning text-dark">
+                                        {% set role = app.user.roles|first %}
+                                        {{ role|replace({'ROLE_': ''})|title }}
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="bi bi-calendar-date text-info me-2"></i> Today's Date</span>
+                                    <span class="fw-bold">{{ "now"|date("F j, Y") }}</span>
+                                </li>
+
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

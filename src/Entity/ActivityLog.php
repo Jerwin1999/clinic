@@ -46,12 +46,6 @@ class ActivityLog
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $timestamp = null;
 
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
-    private ?string $details = null;
-
-    #[ORM\Column(length: 45, nullable: true)]
-    private ?string $ipAddress = null;
-
     public function __construct()
     {
         $this->timestamp = new \DateTime();
@@ -137,28 +131,6 @@ class ActivityLog
         return $this;
     }
 
-    public function getDetails(): ?string
-    {
-        return $this->details;
-    }
-
-    public function setDetails(?string $details): static
-    {
-        $this->details = $details;
-        return $this;
-    }
-
-    public function getIpAddress(): ?string
-    {
-        return $this->ipAddress;
-    }
-
-    public function setIpAddress(?string $ipAddress): static
-    {
-        $this->ipAddress = $ipAddress;
-        return $this;
-    }
-
     // Helper method to format target data based on rubric examples
     public function formatTargetData(string $entityType, string $entityName, ?int $entityId = null): static
     {
@@ -178,19 +150,16 @@ class ActivityLog
         string $action,
         ?string $targetEntity = null,
         ?int $targetId = null,
-        ?string $details = null,
-        ?string $ipAddress = null
+        ?string $targetName = null
     ): self {
         $log = new self();
         $log->setUserId($userId);
         $log->setUsername($username);
         $log->setRole($role);
         $log->setAction($action);
-        $log->setIpAddress($ipAddress);
-        $log->setDetails($details);
         
-        if ($targetEntity !== null) {
-            $log->formatTargetData($targetEntity, '', $targetId);
+        if ($targetEntity !== null && $targetName !== null) {
+            $log->formatTargetData($targetEntity, $targetName, $targetId);
         }
         
         return $log;

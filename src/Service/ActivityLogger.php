@@ -3,7 +3,6 @@
 namespace App\Service;
 
 use App\Entity\ActivityLog;
-use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -23,7 +22,7 @@ class ActivityLogger
     {
         // Get user info
         $userId = $user->getId();
-        $username = $user->getUsername(); // Your User entity uses username field
+        $username = $user->getUsername();
         
         // Get primary role
         $roles = $user->getRoles();
@@ -35,8 +34,11 @@ class ActivityLogger
         $log->setUsername($username);
         $log->setRole($primaryRole);
         $log->setAction($action);
-        $log->setTargetData($targetData);
-        $log->setTimestamp(new \DateTime());
+        
+        // If targetData is provided, set it directly
+        if ($targetData !== null) {
+            $log->setTargetData($targetData);
+        }
         
         // Save to database
         $this->entityManager->persist($log);
@@ -48,7 +50,7 @@ class ActivityLogger
      */
     public function logLogin(UserInterface $user): void
     {
-        $this->log($user, 'LOGIN');
+        $this->log($user, ActivityLog::ACTION_LOGIN);
     }
     
     /**
@@ -56,25 +58,21 @@ class ActivityLogger
      */
     public function logLogout(UserInterface $user): void
     {
-        $this->log($user, 'LOGOUT');
+        $this->log($user, ActivityLog::ACTION_LOGOUT);
     }
     
     /**
-     * Log user creation (admin creates staff)
+     * Log user creation (admin creates staff/user)
      */
     public function logUserCreation(UserInterface $performedBy, UserInterface $createdUser): void
     {
-        $roles = $createdUser->getRoles();
-        $role = !empty($roles) ? $roles[0] : 'ROLE_USER';
-        
         $targetData = sprintf(
-            'User: %s (ID: %d, Role: %s)',
+            'User: %s (ID: %d)',
             $createdUser->getUsername(),
-            $createdUser->getId(),
-            $role
+            $createdUser->getId()
         );
         
-        $this->log($performedBy, 'CREATE_USER', $targetData);
+        $this->log($performedBy, ActivityLog::ACTION_CREATE, $targetData);
     }
     
     /**
@@ -88,7 +86,7 @@ class ActivityLogger
             $updatedUser->getId()
         );
         
-        $this->log($performedBy, 'UPDATE_USER', $targetData);
+        $this->log($performedBy, ActivityLog::ACTION_UPDATE, $targetData);
     }
     
     /**
@@ -102,7 +100,7 @@ class ActivityLogger
             $deletedId
         );
         
-        $this->log($performedBy, 'DELETE_USER', $targetData);
+        $this->log($performedBy, ActivityLog::ACTION_DELETE, $targetData);
     }
     
     /**
@@ -116,7 +114,7 @@ class ActivityLogger
             $patient->getId()
         );
         
-        $this->log($user, 'CREATE_PATIENT', $targetData);
+        $this->log($user, ActivityLog::ACTION_CREATE, $targetData);
     }
     
     /**
@@ -130,7 +128,7 @@ class ActivityLogger
             $patient->getId()
         );
         
-        $this->log($user, 'UPDATE_PATIENT', $targetData);
+        $this->log($user, ActivityLog::ACTION_UPDATE, $targetData);
     }
     
     /**
@@ -144,7 +142,7 @@ class ActivityLogger
             $patient->getId()
         );
         
-        $this->log($user, 'DELETE_PATIENT', $targetData);
+        $this->log($user, ActivityLog::ACTION_DELETE, $targetData);
     }
     
     /**
@@ -153,13 +151,12 @@ class ActivityLogger
     public function logDoctorCreation(UserInterface $user, $doctor): void
     {
         $targetData = sprintf(
-            'Doctor: %s (ID: %d, Specialization: %s)',
+            'Doctor: %s (ID: %d)',
             $doctor->getName(),
-            $doctor->getId(),
-            $doctor->getSpecialization()
+            $doctor->getId()
         );
         
-        $this->log($user, 'CREATE_DOCTOR', $targetData);
+        $this->log($user, ActivityLog::ACTION_CREATE, $targetData);
     }
     
     /**
@@ -173,7 +170,7 @@ class ActivityLogger
             $doctor->getId()
         );
         
-        $this->log($user, 'UPDATE_DOCTOR', $targetData);
+        $this->log($user, ActivityLog::ACTION_UPDATE, $targetData);
     }
     
     /**
@@ -187,23 +184,38 @@ class ActivityLogger
             $doctor->getId()
         );
         
-        $this->log($user, 'DELETE_DOCTOR', $targetData);
+        $this->log($user, ActivityLog::ACTION_DELETE, $targetData);
     }
     
     /**
-     * Log appointment creation
+     * Log appointment creation - SAFE VERSION
      */
     public function logAppointmentCreation(UserInterface $user, $appointment): void
     {
-        $targetData = sprintf(
-            'Appointment: ID %d (Patient: %s, Doctor: %s, Date: %s)',
-            $appointment->getId(),
-            $appointment->getPatient()->getName(),
-            $appointment->getDoctor()->getName(),
-            $appointment->getDate()->format('Y-m-d H:i')
-        );
+        try {
+            $patientName = 'Unknown';
+            $doctorName = 'Unknown';
+            
+            if ($appointment->getPatient() && method_exists($appointment->getPatient(), 'getName')) {
+                $patientName = $appointment->getPatient()->getName() ?? 'Unknown';
+            }
+            
+            if ($appointment->getDoctor() && method_exists($appointment->getDoctor(), 'getName')) {
+                $doctorName = $appointment->getDoctor()->getName() ?? 'Unknown';
+            }
+            
+            $targetData = sprintf(
+                'Appointment: ID %d (Patient: %s, Doctor: %s)',
+                $appointment->getId(),
+                $patientName,
+                $doctorName
+            );
+        } catch (\Exception $e) {
+            // Fallback if there's any error
+            $targetData = sprintf('Appointment: ID %d', $appointment->getId());
+        }
         
-        $this->log($user, 'CREATE_APPOINTMENT', $targetData);
+        $this->log($user, ActivityLog::ACTION_CREATE, $targetData);
     }
     
     /**
@@ -211,12 +223,8 @@ class ActivityLogger
      */
     public function logAppointmentUpdate(UserInterface $user, $appointment): void
     {
-        $targetData = sprintf(
-            'Appointment: ID %d',
-            $appointment->getId()
-        );
-        
-        $this->log($user, 'UPDATE_APPOINTMENT', $targetData);
+        $targetData = sprintf('Appointment: ID %d', $appointment->getId());
+        $this->log($user, ActivityLog::ACTION_UPDATE, $targetData);
     }
     
     /**
@@ -224,12 +232,8 @@ class ActivityLogger
      */
     public function logAppointmentDeletion(UserInterface $user, $appointment): void
     {
-        $targetData = sprintf(
-            'Appointment: ID %d',
-            $appointment->getId()
-        );
-        
-        $this->log($user, 'DELETE_APPOINTMENT', $targetData);
+        $targetData = sprintf('Appointment: ID %d', $appointment->getId());
+        $this->log($user, ActivityLog::ACTION_DELETE, $targetData);
     }
     
     /**
@@ -246,5 +250,24 @@ class ActivityLogger
     public function logProfileUpdate(UserInterface $user): void
     {
         $this->log($user, 'PROFILE_UPDATE');
+    }
+    
+    /**
+     * Alternative: Log with basic info
+     */
+    public function logWithInfo(int $userId, string $username, string $role, string $action, ?string $targetData = null): void
+    {
+        $log = new ActivityLog();
+        $log->setUserId($userId);
+        $log->setUsername($username);
+        $log->setRole($role);
+        $log->setAction($action);
+        
+        if ($targetData !== null) {
+            $log->setTargetData($targetData);
+        }
+        
+        $this->entityManager->persist($log);
+        $this->entityManager->flush();
     }
 }

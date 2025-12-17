@@ -1,4 +1,154 @@
-{{ form_start(form) }}
-    {{ form_widget(form) }}
-    <button class="btn">{{ button_label|default('Save') }}</button>
-{{ form_end(form) }}
+{{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate'}}) }}
+<div class="card shadow-sm border-0 p-4 mt-4">
+    <h4 class="mb-4 text-primary">{{ title|default('User Management') }}</h4>
+
+    <!-- Username Field -->
+    <div class="mb-3">
+        {{ form_label(form.username, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+        {{ form_widget(form.username, {'attr': {'class': 'form-control rounded-3'}}) }}
+        {{ form_errors(form.username) }}
+    </div>
+
+    <!-- Roles Field -->
+    <div class="mb-3">
+        {{ form_label(form.roles, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+        {{ form_widget(form.roles, {'attr': {'class': 'form-select rounded-3'}}) }}
+        <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple roles</small>
+        {{ form_errors(form.roles) }}
+    </div>
+
+    <!-- Password Field -->
+    <div class="mb-3">
+        {{ form_label(form.password, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+        {{ form_widget(form.password, {'attr': {'class': 'form-control rounded-3'}}) }}
+        <small class="form-text text-muted">
+            {% if is_edit is defined and is_edit %}
+                Leave blank to keep current password
+            {% else %}
+                Password must be at least 6 characters
+            {% endif %}
+        </small>
+        {{ form_errors(form.password) }}
+    </div>
+
+    <!-- CSRF Token (hidden) -->
+    {{ form_widget(form._token) }}
+
+    <div class="d-flex justify-content-end mt-4 gap-2">
+        <a href="{{ path(back_path|default('app_user_index')) }}" class="btn btn-secondary px-4 py-2 rounded-3">
+            <i class="bi bi-arrow-left-circle me-1"></i> Back to List
+        </a>
+        <button type="submit" class="btn btn-primary px-4 py-2 rounded-3">
+            <i class="bi bi-save me-1"></i> {{ button_label|default('Save User') }}
+        </button>
+    </div>
+</div>
+{{ form_end(form, {'render_rest': false}) }}
+
+<style>
+    /* Hide the CSRF token */
+    input[name$="[_token]"] {
+        display: none !important;
+    }
+
+    /* Improve select field appearance */
+    .form-select {
+        padding: 0.75rem 1rem;
+        border: 1px solid #dee2e6;
+        transition: all 0.2s ease;
+    }
+
+    .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    /* Error styling */
+    .invalid-feedback {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.875rem;
+        color: #dc3545;
+    }
+
+    .form-control.is-invalid,
+    .form-select.is-invalid {
+        border-color: #dc3545;
+    }
+
+    /* Password strength indicator (optional) */
+    .password-strength {
+        height: 4px;
+        background: #e9ecef;
+        border-radius: 2px;
+        margin-top: 0.25rem;
+        overflow: hidden;
+    }
+
+    .password-strength-fill {
+        height: 100%;
+        transition: width 0.3s ease;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Password strength indicator (optional enhancement)
+    const passwordInput = document.querySelector('#{{ form.password.vars.id }}');
+    if (passwordInput) {
+        const strengthBar = document.createElement('div');
+        strengthBar.className = 'password-strength';
+        const strengthFill = document.createElement('div');
+        strengthFill.className = 'password-strength-fill';
+        strengthBar.appendChild(strengthFill);
+        passwordInput.parentNode.appendChild(strengthBar);
+
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            let strength = 0;
+            
+            if (password.length >= 6) strength += 25;
+            if (/[A-Z]/.test(password)) strength += 25;
+            if (/[0-9]/.test(password)) strength += 25;
+            if (/[^A-Za-z0-9]/.test(password)) strength += 25;
+            
+            strengthFill.style.width = strength + '%';
+            strengthFill.style.backgroundColor = 
+                strength < 25 ? '#dc3545' : 
+                strength < 50 ? '#fd7e14' : 
+                strength < 75 ? '#ffc107' : '#198754';
+        });
+    }
+
+    // Form validation
+    const form = document.querySelector('form.needs-validation');
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+
+        // Real-time validation
+        const inputs = form.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                this.checkValidity();
+            });
+        });
+    }
+
+    // Enhance select2 for roles (optional)
+    const rolesSelect = document.querySelector('#{{ form.roles.vars.id }}');
+    if (rolesSelect) {
+        // You could initialize Select2 here if you include the library
+        // $(rolesSelect).select2({
+        //     theme: 'bootstrap-5',
+        //     placeholder: 'Select roles...',
+        //     allowClear: true
+        // });
+    }
+});
+</script>

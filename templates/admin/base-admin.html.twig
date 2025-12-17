@@ -9,7 +9,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- ✅ DataTables CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.5/css/dataTables.dataTables.css">
+
+    <!-- ✅ Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
     <style>
         body {
@@ -21,50 +24,111 @@
         .sidebar {
             width: 240px;
             height: 100vh;
-            background-color: #212529;
+            background: linear-gradient(180deg, #212529 0%, #1a1e21 100%);
             color: white;
             position: fixed;
             top: 0;
             left: 0;
             display: flex;
             flex-direction: column;
-            justify-content: space-between; /* Added to push logout to bottom */
+            justify-content: space-between;
+            box-shadow: 3px 0 10px rgba(0, 0, 0, 0.1);
         }
 
         .sidebar h3 {
             text-align: center;
             padding: 20px;
-            border-bottom: 1px solid #444;
+            border-bottom: 1px solid #2c3034;
             margin: 0;
             background-color: #343a40;
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
 
         .nav-link {
-            color: #adb5bd;
-            padding: 12px 20px;
-            transition: all 0.2s;
+            color: #dee2e6;
+            padding: 14px 20px;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .nav-link:hover,
-        .nav-link.active {
-            background-color: #495057;
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .nav-link:hover {
+            background-color: #2c3034;
             color: white;
+            border-left-color: #0d6efd;
+            padding-left: 25px;
+        }
+
+        .nav-link.active {
+            background-color: #2c3034;
+            color: white;
+            border-left-color: #0d6efd;
+            font-weight: 500;
         }
 
         .sidebar .nav-top {
             display: flex;
             flex-direction: column;
+            flex-grow: 1;
         }
 
         .sidebar .nav-bottom {
             display: flex;
             flex-direction: column;
-            margin-bottom: 20px;
+            padding: 0;
+            border-top: 1px solid #2c3034;
+        }
+
+        .user-info {
+            padding: 20px;
+            background-color: #2c3034;
+            border-bottom: 1px solid #495057;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: white;
+            margin-bottom: 5px;
+            font-size: 1rem;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            color: #adb5bd;
+            background-color: #495057;
+            padding: 4px 12px;
+            border-radius: 12px;
+            display: inline-block;
+            font-weight: 500;
         }
 
         .content {
             margin-left: 240px;
             padding: 30px;
+            min-height: 100vh;
+            background-color: #f8f9fa;
+        }
+
+        .sidebar nav {
+            padding-top: 10px;
+        }
+
+        /* Active link detection */
+        .nav-link[href*="{{ app.request.get('_route') }}"] {
+            background-color: #2c3034;
+            color: white;
+            border-left-color: #0d6efd;
+            font-weight: 500;
         }
     </style>
 </head>
@@ -72,17 +136,54 @@
     <!-- ✅ Sidebar -->
     <div class="sidebar">
         <div class="nav-top">
-            <h3>Clinic Admin</h3>
+            <h3> Clinic Admin</h3>
             <nav class="nav flex-column">
-                <a class="nav-link" href="{{ path('app_user_index') }}">🧍‍♂️ Users</a>
-                <a class="nav-link" href="{{ path('app_doctor_index') }}">🩺 Doctors</a>
-                <a class="nav-link" href="{{ path('app_patient_index') }}">🧍‍♂️ Patients</a>
-                <a class="nav-link" href="{{ path('app_appointment_index') }}">📅 Appointments</a>
-                <a class="nav-link" href="{{ path('app_activity_log_index') }}">🧍 Activity Log</a>
+                <a class="nav-link" href="{{ path('app_dashboard') }}">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a class="nav-link" href="{{ path('app_user_index') }}">
+                    <i class="bi bi-people"></i>
+                    <span>Users</span>
+                </a>
+                <a class="nav-link" href="{{ path('app_doctor_index') }}">
+                    <i class="bi bi-heart-pulse"></i>
+                    <span>Doctors</span>
+                </a>
+                <a class="nav-link" href="{{ path('app_patient_index') }}">
+                    <i class="bi bi-person-badge"></i>
+                    <span>Patients</span>
+                </a>
+                <a class="nav-link" href="{{ path('app_appointment_index') }}">
+                    <i class="bi bi-calendar-check"></i>
+                    <span>Appointments</span>
+                </a>
+                <a class="nav-link" href="{{ path('app_activity_log_index') }}">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Activity Log</span>
+                </a>
             </nav>
         </div>
+        
         <div class="nav-bottom">
-            <a class="nav-link" href="{{ path('app_logout') }}">🚪 Logout</a>
+            <!-- User Info Section -->
+            <div class="user-info">
+                <div class="user-name">{{ app.user ? app.user.username : 'User' }}</div>
+                <div class="user-role">
+                    {% if app.user %}
+                        {% set role = app.user.roles|first %}
+                        {{ role|replace({'ROLE_': ''})|title }}
+                    {% else %}
+                        Unknown Role
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Logout Button -->
+            <a class="nav-link" href="{{ path('app_logout') }}">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Logout</span>
+            </a>
         </div>
     </div>
 
@@ -91,17 +192,88 @@
         {% block body %}{% endblock %}
     </div>
 
-    <!-- ✅ Bootstrap & DataTables JS -->
+    <!-- ✅ jQuery (Required for DataTables) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <!-- ✅ Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+    
+    <!-- ✅ DataTables JS -->
+    <script src="https://cdn.datatables.net/2.3.5/js/dataTables.js"></script>
 
     <!-- ✅ Conditional DataTable Init -->
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const table = document.querySelector("#doctorTable");
-            if (table) {
-                new DataTable(table);
+        $(document).ready(function() {
+            // Initialize DataTable only if table has data rows
+            function initializeDataTable(tableId) {
+                const $table = $(`#${tableId}`);
+                
+                // Check if table exists and has at least one data row
+                if ($table.length) {
+                    const $tbody = $table.find('tbody');
+                    const $dataRows = $tbody.find('tr').filter(function() {
+                        return $(this).find('td').length > 0 && 
+                               !$(this).is(':empty') && 
+                               !$(this).hasClass('no-data-row');
+                    });
+                    
+                    // Only initialize if there are actual data rows
+                    if ($dataRows.length > 0) {
+                        try {
+                            return $table.DataTable({
+                                paging: true,
+                                searching: true,
+                                ordering: true,
+                                responsive: true,
+                                pageLength: 10,
+                                language: {
+                                    emptyTable: "No data available",
+                                    zeroRecords: "No matching records found",
+                                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                                    infoEmpty: "No entries available",
+                                    lengthMenu: "Show _MENU_ entries",
+                                    search: "Search:"
+                                }
+                            });
+                        } catch (error) {
+                            console.warn(`Could not initialize DataTable for #${tableId}:`, error);
+                        }
+                    } else {
+                        // For empty tables, don't initialize DataTables
+                        $tbody.html('<tr class="no-data-row"><td colspan="' + $table.find('thead th').length + '" class="text-center text-muted py-4">No data available</td></tr>');
+                    }
+                }
+                return null;
             }
+            
+            // Initialize specific tables if they exist and have data
+            const tables = ['doctorTable', 'userTable', 'patientTable', 'appointmentTable', 'activityLogTable'];
+            tables.forEach(tableId => initializeDataTable(tableId));
+            
+            // Handle tables with 'datatable' class
+            $('.datatable').each(function() {
+                const $table = $(this);
+                const $tbody = $table.find('tbody');
+                const $dataRows = $tbody.find('tr').filter(function() {
+                    return $(this).find('td').length > 0 && !$(this).is(':empty');
+                });
+                
+                if ($dataRows.length > 0) {
+                    try {
+                        $table.DataTable({
+                            paging: true,
+                            searching: true,
+                            ordering: true,
+                            responsive: true,
+                            pageLength: 10
+                        });
+                    } catch (error) {
+                        console.warn('Could not initialize DataTable:', error);
+                    }
+                } else {
+                    $tbody.html('<tr><td colspan="' + $table.find('thead th').length + '" class="text-center text-muted py-4">No data available</td></tr>');
+                }
+            });
         });
     </script>
 

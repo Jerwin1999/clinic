@@ -3,11 +3,13 @@
     <h4 class="mb-4 text-primary">{{ title|default('Form') }}</h4>
 
     {% for field in form %}
+        {% if field.vars.name != '_token' %}  {# Skip the CSRF token #}
         <div class="mb-3">
             {{ form_label(field, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
             {{ form_widget(field, {'attr': {'class': 'form-control rounded-3'}}) }}
             {{ form_errors(field) }}
         </div>
+        {% endif %}
     {% endfor %}
 
     <div class="d-flex justify-content-end mt-4 gap-2">
@@ -20,3 +22,10 @@
     </div>
 </div>
 {{ form_end(form) }}
+
+<style>
+    /* Hide the CSRF token input but keep it functional */
+    input[name$="[_token]"] {
+        display: none !important;
+    }
+</style>

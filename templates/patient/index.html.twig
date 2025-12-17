@@ -15,70 +15,72 @@
                 </a>
             </div>
 
-            <!-- ✅ DataTable -->
-            <table id="patientTable" class="table table-striped table-hover align-middle">
-                <thead class="table-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Address</th>
-                        <th>Contact</th>
-                        <th>Gender</th>
-                        <th>Age</th>
-                        <th class="text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% for patient in patients %}
-                    <tr>
-                        <td>{{ patient.id }}</td>
-                        <td>{{ patient.name }}</td>
-                        <td>{{ patient.email }}</td>
-                        <td>{{ patient.address }}</td>
-                        <td>{{ patient.contact }}</td>
-                        <td>{{ patient.gender }}</td>
-                        <td>{{ patient.age }}</td>
-                        <td class="text-center">
-                            <a href="{{ path('app_patient_show', {'id': patient.id}) }}" class="btn btn-sm btn-info text-white me-1">
-                                👁️ View
-                            </a>
-                            <a href="{{ path('app_patient_edit', {'id': patient.id}) }}" class="btn btn-sm btn-warning text-white">
-                                ✏️ Edit
-                            </a>
-                        </td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="8" class="text-center text-muted">No patients found</td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+            <!-- ✅ Simple Bootstrap table that works both empty and with data -->
+            {% if patients is not empty %}
+                <!-- When there's data, use DataTables -->
+                <table id="patientTable" class="table table-striped table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Address</th>
+                            <th>Contact</th>
+                            <th>Gender</th>
+                            <th>Age</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for patient in patients %}
+                        <tr>
+                            <td>{{ patient.id }}</td>
+                            <td>{{ patient.name }}</td>
+                            <td>{{ patient.email }}</td>
+                            <td>{{ patient.address }}</td>
+                            <td>{{ patient.contact }}</td>
+                            <td>{{ patient.gender }}</td>
+                            <td>{{ patient.age }}</td>
+                            <td class="text-center">
+                                <a href="{{ path('app_patient_show', {'id': patient.id}) }}" class="btn btn-sm btn-info text-white me-1">
+                                    👁️ View
+                                </a>
+                                <a href="{{ path('app_patient_edit', {'id': patient.id}) }}" class="btn btn-sm btn-warning text-white">
+                                    ✏️ Edit
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <!-- When empty, show a simple table without DataTables -->
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Address</th>
+                            <th>Contact</th>
+                            <th>Gender</th>
+                            <th>Age</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                <div class="py-3">
+                                    <i class="bi bi-person-x" style="font-size: 2rem; color: #6c757d;"></i>
+                                    <p class="mt-2 mb-0">No patients found</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            {% endif %}
         </div>
     </div>
 </div>
-
-<!-- ✅ DataTables Initialization -->
-{% block javascripts %}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            new DataTable('#patientTable', {
-                paging: true,
-                searching: true,
-                ordering: true,
-                responsive: true,
-                pageLength: 5,
-                language: {
-                    search: "🔍 Search:",
-                    lengthMenu: "Show _MENU_ entries per page",
-                    zeroRecords: "No matching patients found",
-                    info: "Showing _START_ to _END_ of _TOTAL_ patients",
-                    infoEmpty: "No patients available",
-                    infoFiltered: "(filtered from _MAX_ total patients)"
-                }
-            });
-        });
-    </script>
-{% endblock %}
 {% endblock %}

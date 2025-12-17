@@ -54,28 +54,4 @@
     </div>
 </div>
 
-{% block javascripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const table = document.querySelector("#userTable");
-        if (table) {
-            new DataTable(table, {
-                paging: true,
-                searching: true,
-                ordering: true,
-                responsive: true,
-                pageLength: 5,
-                language: {
-                    search: "🔍 Search:",
-                    lengthMenu: "Show _MENU_ entries per page",
-                    zeroRecords: "No matching users found",
-                    info: "Showing _START_ to _END_ of _TOTAL_ users",
-                    infoEmpty: "No users available",
-                    infoFiltered: "(filtered from _MAX_ total users)"
-                }
-            });
-        }
-    });
-</script>
-{% endblock %}
 {% endblock %}

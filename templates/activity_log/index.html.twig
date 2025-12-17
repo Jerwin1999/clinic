@@ -65,6 +65,54 @@
                 </div>
             </div>
 
+            <!-- Filter Form -->
+            <div class="card mb-4 border-light">
+                <div class="card-body">
+                    <form method="get" action="{{ path('app_activity_log_index') }}" id="filterForm">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label for="action" class="form-label small">Action</label>
+                                <select class="form-control form-control-sm" id="action" name="action">
+                                    <option value="">All Actions</option>
+                                    <option value="LOGIN">Login</option>
+                                    <option value="LOGOUT">Logout</option>
+                                    <option value="CREATE">Create</option>
+                                    <option value="UPDATE">Update</option>
+                                    <option value="DELETE">Delete</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="role" class="form-label small">Role</label>
+                                <select class="form-control form-control-sm" id="role" name="role">
+                                    <option value="">All Roles</option>
+                                    <option value="ROLE_ADMIN">Admin</option>
+                                    <option value="ROLE_STAFF">Staff</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="user" class="form-label small">Username</label>
+                                <input type="text" class="form-control form-control-sm" id="user" name="user" 
+                                       placeholder="Search username...">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="date" class="form-label small">Date</label>
+                                <input type="date" class="form-control form-control-sm" id="date" name="date">
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12 d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary btn-sm me-2">
+                                    🔍 Apply Filters
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="resetFilters">
+                                    🗑️ Reset
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <!-- DataTable -->
             <table id="activityLogsTable" class="table table-striped table-hover align-middle">
                 <thead class="table-dark">
@@ -75,8 +123,6 @@
                         <th>Role</th>
                         <th>Action</th>
                         <th>Target Data</th>
-                        <th>IP Address</th>
-                        <th class="text-center">Details</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -124,7 +170,7 @@
                         </td>
                         <td>
                             {% if log.targetData %}
-                                <span class="text-truncate d-inline-block" style="max-width: 150px;" 
+                                <span class="text-truncate d-inline-block" style="max-width: 250px;" 
                                       data-bs-toggle="tooltip" title="{{ log.targetData|e('html_attr') }}">
                                     {{ log.targetData }}
                                 </span>
@@ -132,47 +178,14 @@
                                 <span class="text-muted">—</span>
                             {% endif %}
                         </td>
-                        <td>
-                            <code class="text-dark">{{ log.ipAddress ?? '—' }}</code>
-                        </td>
-                        <td class="text-center">
-                            {% if log.details %}
-                                <button class="btn btn-sm btn-outline-info view-details" 
-                                        data-id="{{ log.id }}"
-                                        data-details="{{ log.details|e('html_attr') }}">
-                                    👁️ View
-                                </button>
-                            {% else %}
-                                <span class="text-muted small">—</span>
-                            {% endif %}
-                        </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="8" class="text-center text-muted">No activity logs found</td>
+                        <td colspan="6" class="text-center text-muted">No activity logs found</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
-    </div>
-</div>
-
-<!-- Details Modal -->
-<div class="modal fade" id="detailsModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">📋 Log Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <pre id="detailsContent" class="bg-light p-3 rounded" style="white-space: pre-wrap;"></pre>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="copyDetails()">Copy</button>
-            </div>
         </div>
     </div>
 </div>
@@ -232,24 +245,19 @@ document.addEventListener('DOMContentLoaded', function() {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    // View details button handler
-    document.querySelectorAll('.view-details').forEach(button => {
-        button.addEventListener('click', function() {
-            const details = this.dataset.details;
-            try {
-                document.getElementById('detailsContent').textContent = 
-                    JSON.stringify(JSON.parse(details), null, 2);
-            } catch (e) {
-                document.getElementById('detailsContent').textContent = details;
-            }
-            new bootstrap.Modal(document.getElementById('detailsModal')).show();
-        });
-    });
-
-    // Clear filters
+    // Clear filters in DataTable
     document.getElementById('clearFilters').addEventListener('click', function() {
         table.search('').draw();
         this.blur();
+    });
+
+    // Reset filter form
+    document.getElementById('resetFilters').addEventListener('click', function() {
+        document.getElementById('action').value = '';
+        document.getElementById('role').value = '';
+        document.getElementById('user').value = '';
+        document.getElementById('date').value = '';
+        document.getElementById('filterForm').submit();
     });
 
     // Clear logs functionality
@@ -281,23 +289,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-
-// Copy details to clipboard
-function copyDetails() {
-    const detailsText = document.getElementById('detailsContent').textContent;
-    navigator.clipboard.writeText(detailsText).then(() => {
-        alert('Details copied to clipboard!');
-    }).catch(() => {
-        // Fallback
-        const textArea = document.createElement("textarea");
-        textArea.value = detailsText;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-        alert('Details copied to clipboard!');
-    });
-}
 </script>
 
 <!-- Add this to your base-admin.html.twig or main CSS -->

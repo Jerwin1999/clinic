@@ -5,7 +5,7 @@ namespace App\Controller;
 use App\Entity\Doctor;
 use App\Form\DoctorType;
 use App\Repository\DoctorRepository;
-use App\Service\ActivityLogger; // Add this use statement
+use App\Service\ActivityLogger;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,13 +15,12 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/doctor')]
 final class DoctorController extends AbstractController
 {
-    // Add ActivityLogger to constructor
     public function __construct(
         private ActivityLogger $activityLogger
     ) {
     }
 
-    #[Route(name: 'app_doctor_index', methods: ['GET'])]
+    #[Route('/', name: 'app_doctor_index', methods: ['GET'])]
     public function index(DoctorRepository $doctorRepository): Response
     {
         return $this->render('doctor/index.html.twig', [
@@ -41,11 +40,11 @@ final class DoctorController extends AbstractController
             $entityManager->flush();
 
             // Log the doctor creation
-            $this->activityLogger->logDoctorCreation($this->getUser(), $doctor);
+            if ($user = $this->getUser()) {
+                $this->activityLogger->logDoctorCreation($user, $doctor);
+            }
 
-            // Add flash message
             $this->addFlash('success', 'Doctor created successfully!');
-
             return $this->redirectToRoute('app_doctor_index', [], Response::HTTP_SEE_OTHER);
         }
 
@@ -73,11 +72,11 @@ final class DoctorController extends AbstractController
             $entityManager->flush();
 
             // Log the doctor update
-            $this->activityLogger->logDoctorUpdate($this->getUser(), $doctor);
+            if ($user = $this->getUser()) {
+                $this->activityLogger->logDoctorUpdate($user, $doctor);
+            }
 
-            // Add flash message
             $this->addFlash('success', 'Doctor updated successfully!');
-
             return $this->redirectToRoute('app_doctor_index', [], Response::HTTP_SEE_OTHER);
         }
 
@@ -93,12 +92,13 @@ final class DoctorController extends AbstractController
         if ($this->isCsrfTokenValid('delete'.$doctor->getId(), $request->getPayload()->getString('_token'))) {
             
             // Log the doctor deletion BEFORE removing it
-            $this->activityLogger->logDoctorDeletion($this->getUser(), $doctor);
+            if ($user = $this->getUser()) {
+                $this->activityLogger->logDoctorDeletion($user, $doctor);
+            }
             
             $entityManager->remove($doctor);
             $entityManager->flush();
 
-            // Add flash message
             $this->addFlash('success', 'Doctor deleted successfully!');
         }
 
