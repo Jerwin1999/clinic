@@ -1,0 +1,50 @@
+{% extends 'admin/base-admin.html.twig' %}
+
+{% block title %}Doctor Details{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <h1 class="mb-4">👨‍⚕️ Doctor Details</h1>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <table class="table table-bordered table-striped align-middle mb-0">
+                <tbody>
+                    <tr>
+                        <th style="width: 200px;">ID</th>
+                        <td>{{ doctor.id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Name</th>
+                        <td>{{ doctor.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Specialization</th>
+                        <td>{{ doctor.specialization }}</td>
+                    </tr>
+                    <tr>
+                        <th>Contact</th>
+                        <td>{{ doctor.contact }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email</th>
+                        <td>{{ doctor.email }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-4 d-flex gap-2">
+        <a href="{{ path('app_doctor_index') }}" class="btn btn-secondary">
+            ⬅️ Back to List
+        </a>
+
+        <a href="{{ path('app_doctor_edit', {'id': doctor.id}) }}" class="btn btn-warning text-white">
+            ✏️ Edit
+        </a>
+
+        {{ include('doctor/_delete_form.html.twig', { 'button_class': 'btn btn-danger', 'button_label': '🗑️ Delete' }) }}
+    </div>
+</div>
+{% endblock %}

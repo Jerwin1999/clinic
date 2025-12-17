@@ -1,0 +1,80 @@
+{% extends 'admin/base-admin.html.twig' %}
+
+{% block title %}Doctor List{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <h1 class="mb-4">🩺 Doctor Management</h1>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">Doctor List</h5>
+                <a href="{{ path('app_doctor_new') }}" class="btn btn-primary btn-sm">
+                    ➕ Add New Doctor
+                </a>
+            </div>
+
+            <!-- ✅ DataTable -->
+            <table id="doctorTable" class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Specialization</th>
+                        <th>Contact</th>
+                        <th>Email</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for doctor in doctors %}
+                    <tr>
+                        <td>{{ doctor.id }}</td>
+                        <td>{{ doctor.name }}</td>
+                        <td>{{ doctor.specialization }}</td>
+                        <td>{{ doctor.contact }}</td>
+                        <td>{{ doctor.email }}</td>
+                        <td class="text-center">
+                            <a href="{{ path('app_doctor_show', {'id': doctor.id}) }}" class="btn btn-sm btn-info text-white me-1">
+                                👁️ View
+                            </a>
+                            <a href="{{ path('app_doctor_edit', {'id': doctor.id}) }}" class="btn btn-sm btn-warning text-white">
+                                ✏️ Edit
+                            </a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">No doctors found</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ DataTables Initialization -->
+{% block javascripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            new DataTable('#doctorTable', {
+                paging: true,
+                searching: true,
+                ordering: true,
+                responsive: true,
+                pageLength: 5,
+                language: {
+                    search: "🔍 Search:",
+                    lengthMenu: "Show _MENU_ entries per page",
+                    zeroRecords: "No matching doctors found",
+                    info: "Showing _START_ to _END_ of _TOTAL_ doctors",
+                    infoEmpty: "No doctors available",
+                    infoFiltered: "(filtered from _MAX_ total doctors)"
+                }
+            });
+        });
+    </script>
+{% endblock %}
+{% endblock %}

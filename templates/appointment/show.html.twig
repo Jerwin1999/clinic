@@ -1,0 +1,46 @@
+{% extends 'admin/base-admin.html.twig' %}
+
+{% block title %}Appointment Details{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <h1 class="mb-4 text-primary">📅 Appointment Details</h1>
+
+    <div class="card shadow-sm border-0 p-4">
+        <div class="card-body p-0">
+            <table class="table table-bordered table-striped align-middle mb-0">
+                <tbody>
+                    <tr>
+                        <th style="width: 200px;">ID</th>
+                        <td>{{ appointment.id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Date</th>
+                        <td>{{ appointment.date ? appointment.date|date('Y-m-d H:i:s') : '' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Reason</th>
+                        <td>{{ appointment.reason }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status</th>
+                        <td>{{ appointment.status }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-4 d-flex gap-2">
+        <a href="{{ path('app_appointment_index') }}" class="btn btn-secondary">
+            ⬅️ Back to List
+        </a>
+
+        <a href="{{ path('app_appointment_edit', {'id': appointment.id}) }}" class="btn btn-warning text-white">
+            ✏️ Edit
+        </a>
+
+        {{ include('appointment/_delete_form.html.twig', { 'button_class': 'btn btn-danger', 'button_label': '🗑️ Delete' }) }}
+    </div>
+</div>
+{% endblock %}
