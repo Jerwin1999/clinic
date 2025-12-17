@@ -23,6 +23,10 @@ class DoctorType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Doctor::class,
+            // Explicitly configure CSRF
+            'csrf_protection' => true,
+            'csrf_field_name' => '_token',
+            'csrf_token_id'   => 'doctor_form', // Use a unique token ID for this form
         ]);
     }
 }

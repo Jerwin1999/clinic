@@ -33,6 +33,10 @@ class AppointmentType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Appointment::class,
+            // Add CSRF configuration
+            'csrf_protection' => true,
+            'csrf_field_name' => '_token',
+            'csrf_token_id'   => 'appointment_form', // Unique token ID for this form
         ]);
     }
 }

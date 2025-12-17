@@ -3,17 +3,23 @@
     <h4 class="mb-4 text-primary">{{ title|default('Form') }}</h4>
 
     {% for field in form %}
-        <div class="mb-3">
-            {{ form_label(field, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
-            {{ form_widget(field, {'attr': {'class': 'form-control rounded-3'}}) }}
-            {{ form_errors(field) }}
-        </div>
+        {# Skip the CSRF token as we'll render it separately #}
+        {% if field.vars.name != '_token' %}
+            <div class="mb-3">
+                {{ form_label(field, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+                {{ form_widget(field, {'attr': {'class': 'form-control rounded-3'}}) }}
+                {{ form_errors(field) }}
+            </div>
+        {% endif %}
     {% endfor %}
 
+    {# Important: Render the CSRF token #}
+    {{ form_widget(form._token) }}
+
     <div class="d-flex justify-content-end mt-4">
-        <button class="btn btn-primary px-4 py-2 rounded-3">
+        <button type="submit" class="btn btn-primary px-4 py-2 rounded-3">
             <i class="bi bi-save me-1"></i> {{ button_label|default('Save') }}
         </button>
     </div>
 </div>
-{{ form_end(form) }}
+{{ form_end(form, {'render_rest': false}) }}
