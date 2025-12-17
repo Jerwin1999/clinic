@@ -17,6 +17,7 @@
             background-color: #f8f9fa;
             margin: 0;
         }
+
         .sidebar {
             width: 240px;
             height: 100vh;
@@ -27,7 +28,9 @@
             left: 0;
             display: flex;
             flex-direction: column;
+            justify-content: space-between; /* Added to push logout to bottom */
         }
+
         .sidebar h3 {
             text-align: center;
             padding: 20px;
@@ -35,16 +38,30 @@
             margin: 0;
             background-color: #343a40;
         }
+
         .nav-link {
             color: #adb5bd;
             padding: 12px 20px;
             transition: all 0.2s;
         }
+
         .nav-link:hover,
         .nav-link.active {
             background-color: #495057;
             color: white;
         }
+
+        .sidebar .nav-top {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar .nav-bottom {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
         .content {
             margin-left: 240px;
             padding: 30px;
@@ -54,12 +71,19 @@
 <body>
     <!-- ✅ Sidebar -->
     <div class="sidebar">
-        <h3>Clinic Admin</h3>
-        <nav class="nav flex-column">
-            <a class="nav-link" href="{{ path('app_doctor_index') }}">🩺 Doctor</a>
-            <a class="nav-link" href="{{ path('app_patient_index') }}">🧍‍♂️ Patient</a>
-            <a class="nav-link" href="{{ path('app_appointment_index') }}">📅 Appointment</a>
-        </nav>
+        <div class="nav-top">
+            <h3>Clinic Admin</h3>
+            <nav class="nav flex-column">
+                <a class="nav-link" href="{{ path('app_user_index') }}">🧍‍♂️ Users</a>
+                <a class="nav-link" href="{{ path('app_doctor_index') }}">🩺 Doctors</a>
+                <a class="nav-link" href="{{ path('app_patient_index') }}">🧍‍♂️ Patients</a>
+                <a class="nav-link" href="{{ path('app_appointment_index') }}">📅 Appointments</a>
+                <a class="nav-link" href="{{ path('app_activity_log') }}">🧍 Activty Log</a>
+            </nav>
+        </div>
+        <div class="nav-bottom">
+            <a class="nav-link" href="{{ path('app_logout') }}">🚪 Logout</a>
+        </div>
     </div>
 
     <!-- ✅ Main Content -->

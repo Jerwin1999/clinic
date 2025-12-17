@@ -1,0 +1,348 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Activity Logs{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">📊 Activity Logs</h1>
+            
+            {# Statistics Cards #}
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-white bg-primary">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Logs</h5>
+                            <p class="card-text display-6">{{ logs|length }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-success">
+                        <div class="card-body">
+                            <h5 class="card-title">Today's Logs</h5>
+                            <p class="card-text display-6">{{ logs|filter(log => log.timestamp|date('Y-m-d') == 'now'|date('Y-m-d'))|length }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-warning">
+                        <div class="card-body">
+                            <h5 class="card-title">Admin Actions</h5>
+                            <p class="card-text display-6">{{ logs|filter(log => log.role == 'ROLE_ADMIN')|length }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-info">
+                        <div class="card-body">
+                            <h5 class="card-title">Staff Actions</h5>
+                            <p class="card-text display-6">{{ logs|filter(log => log.role == 'ROLE_STAFF')|length }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Filters #}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">🔍 Filter Logs</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="action" class="form-label">Action Type</label>
+                            <select name="action" id="action" class="form-select">
+                                <option value="">All Actions</option>
+                                <option value="LOGIN" {{ app.request.query.get('action') == 'LOGIN' ? 'selected' : '' }}>Login</option>
+                                <option value="LOGOUT" {{ app.request.query.get('action') == 'LOGOUT' ? 'selected' : '' }}>Logout</option>
+                                <option value="CREATE" {{ app.request.query.get('action') == 'CREATE' ? 'selected' : '' }}>Create</option>
+                                <option value="UPDATE" {{ app.request.query.get('action') == 'UPDATE' ? 'selected' : '' }}>Update</option>
+                                <option value="DELETE" {{ app.request.query.get('action') == 'DELETE' ? 'selected' : '' }}>Delete</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="role" class="form-label">User Role</label>
+                            <select name="role" id="role" class="form-select">
+                                <option value="">All Roles</option>
+                                <option value="ROLE_ADMIN" {{ app.request.query.get('role') == 'ROLE_ADMIN' ? 'selected' : '' }}>Administrator</option>
+                                <option value="ROLE_STAFF" {{ app.request.query.get('role') == 'ROLE_STAFF' ? 'selected' : '' }}>Staff</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="user" class="form-label">Username</label>
+                            <input type="text" name="user" id="user" class="form-control" 
+                                   value="{{ app.request.query.get('user') }}" 
+                                   placeholder="Search by username...">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="date" class="form-label">Date</label>
+                            <input type="date" name="date" id="date" class="form-control" 
+                                   value="{{ app.request.query.get('date') }}">
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">Apply Filters</button>
+                            <a href="{{ path('app_activity_log') }}" class="btn btn-secondary">Clear Filters</a>
+                            <button type="button" id="exportBtn" class="btn btn-success float-end">
+                                📥 Export to CSV
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {# Logs Table #}
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">📝 System Activity Log</h5>
+                    <span class="badge bg-secondary">Showing {{ logs|length }} records</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0" id="logsTable">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Timestamp</th>
+                                    <th>User</th>
+                                    <th>Role</th>
+                                    <th>Action</th>
+                                    <th>Target Data</th>
+                                    <th>IP Address</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if logs is empty %}
+                                    <tr>
+                                        <td colspan="8" class="text-center py-4">
+                                            <div class="text-muted">
+                                                <i class="bi bi-inbox fs-1"></i>
+                                                <p class="mt-2">No activity logs found</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    {% for log in logs %}
+                                        <tr>
+                                            <td>{{ log.id }}</td>
+                                            <td>
+                                                <span class="badge bg-light text-dark">
+                                                    {{ log.timestamp|date('Y-m-d H:i:s') }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <strong>{{ log.username }}</strong>
+                                                <br>
+                                                <small class="text-muted">ID: {{ log.userId }}</small>
+                                            </td>
+                                            <td>
+                                                {% if log.role == 'ROLE_ADMIN' %}
+                                                    <span class="badge bg-danger">Admin</span>
+                                                {% else %}
+                                                    <span class="badge bg-primary">Staff</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% set actionColors = {
+                                                    'LOGIN': 'success',
+                                                    'LOGOUT': 'secondary',
+                                                    'CREATE': 'info',
+                                                    'UPDATE': 'warning',
+                                                    'DELETE': 'danger'
+                                                } %}
+                                                <span class="badge bg-{{ actionColors[log.action] ?? 'dark' }}">
+                                                    {{ log.getActionReadable() }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if log.targetData %}
+                                                    <code>{{ log.targetData|slice(0, 50) }}</code>
+                                                    {% if log.targetData|length > 50 %}
+                                                        <a href="#" class="text-decoration-none" 
+                                                           data-bs-toggle="tooltip" 
+                                                           title="{{ log.targetData }}">
+                                                            ...
+                                                        </a>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-muted">N/A</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">{{ log.ipAddress ?? 'N/A' }}</small>
+                                            </td>
+                                            <td>
+                                                {% if log.details %}
+                                                    <button class="btn btn-sm btn-outline-info" 
+                                                            type="button" 
+                                                            data-bs-toggle="collapse" 
+                                                            data-bs-target="#details{{ log.id }}">
+                                                        View Details
+                                                    </button>
+                                                    <div class="collapse" id="details{{ log.id }}">
+                                                        <div class="mt-2 p-2 bg-light rounded">
+                                                            <small>{{ log.details }}</small>
+                                                        </div>
+                                                    </div>
+                                                {% else %}
+                                                    <span class="text-muted">No details</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center mb-0">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">Previous</a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+
+            {# Quick Actions #}
+            <div class="mt-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6>Quick Actions</h6>
+                        <div class="btn-group" role="group">
+                            <a href="{{ path('app_activity_log') }}" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                            </a>
+                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#clearLogsModal">
+                                <i class="bi bi-trash"></i> Clear Old Logs
+                            </button>
+                            <a href="{{ path('app_dashboard') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-speedometer2"></i> Back to Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Clear Logs Modal #}
+<div class="modal fade" id="clearLogsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">⚠️ Clear Old Logs</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to clear logs older than 30 days?</p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    This action cannot be undone. Approximately 
+                    <strong>{{ logs|filter(log => log.timestamp|date('Y-m-d') < 'now'|date_modify('-30 days')|date('Y-m-d'))|length }}</strong>
+                    logs will be deleted.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger">Clear Logs</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table th {
+        font-weight: 600;
+        background-color: #f8f9fa;
+    }
+    .badge {
+        font-size: 0.85em;
+    }
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .card-header {
+        border-bottom: 2px solid #dee2e6;
+    }
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,123,255,0.05);
+    }
+    code {
+        background-color: #f8f9fa;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9em;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // Export to CSV
+        document.getElementById('exportBtn').addEventListener('click', function() {
+            const table = document.getElementById('logsTable');
+            let csv = [];
+            
+            // Headers
+            let headers = [];
+            table.querySelectorAll('thead th').forEach(th => {
+                headers.push(th.textContent.trim());
+            });
+            csv.push(headers.join(','));
+            
+            // Rows
+            table.querySelectorAll('tbody tr').forEach(tr => {
+                let row = [];
+                tr.querySelectorAll('td').forEach(td => {
+                    let text = td.textContent.trim();
+                    // Remove badge content and get clean text
+                    text = text.replace(/Admin|Staff|Login|Logout|Create|Update|Delete/g, '')
+                              .replace(/ID:\s*\d+/g, '')
+                              .replace(/\s+/g, ' ')
+                              .trim();
+                    row.push(`"${text}"`);
+                });
+                csv.push(row.join(','));
+            });
+            
+            // Download
+            const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `activity_logs_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            // Show success message
+            alert('Logs exported successfully!');
+        });
+
+        // Auto-refresh every 30 seconds (optional)
+        setTimeout(function() {
+            window.location.reload();
+        }, 30000);
+    });
+</script>
+{% endblock %}
